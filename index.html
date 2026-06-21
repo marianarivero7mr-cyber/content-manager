@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Content Manager — Mariana Digital</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Inter:wght@400;500;600&family=Cinzel:wght@500;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --glow-p1:#CDB8F5;--glow-p2:#BFE7FF;--glow-s1:#F6D7E7;--glow-s2:#FFEFF7;
+  --glow-n1:#FFFDFD;--glow-n2:#D8DCE6;--glow-n3:#4D425B;--glow-gold:#E8C98A;
+  --alma-p1:#0B1026;--alma-p2:#7C3AED;--alma-s1:#B794F6;--alma-s2:#22D3EE;
+  --alma-n1:#F8FAFC;--alma-n2:#94A3B8;--alma-n3:#1E293B;--alma-aura:#38BDF8;
+}
+
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+
+body {
+  font-family:'Inter',sans-serif;
+  font-size:15px;
+  min-height:100vh;
+  transition:background .4s, color .4s;
+}
+
+/* ===== THEMES ===== */
+body.theme-glow {
+  --bg-base:#FFFDFD;
+  --bg-surface:#FFEFF7;
+  --bg-card:#FFFFFF;
+  --bg-card2:#FFF8FC;
+  --text-primary:#4D425B;
+  --text-secondary:#7A6E80;
+  --text-muted:#A89DB0;
+  --accent:#CDB8F5;
+  --accent2:#E8C98A;
+  --accent3:#F6D7E7;
+  --border:#E8DCF0;
+  --tag-edu-bg:#BFE7FF;--tag-edu-c:#1a5f7a;
+  --tag-ent-bg:#F6D7E7;--tag-ent-c:#7a1a3f;
+  --tag-pos-bg:#CDB8F5;--tag-pos-c:#3D2B6B;
+  --tag-act-bg:#E8C98A;--tag-act-c:#5a3a00;
+  --font-display:'Playfair Display',serif;
+  --font-body:'Inter',sans-serif;
+  --title-gradient:linear-gradient(135deg,#CDB8F5,#E8C98A);
+  --card-shadow:0 2px 16px rgba(205,184,245,0.18);
+  --nav-active-bg:#CDB8F5;
+  --nav-active-c:#4D425B;
+  --btn-primary-bg:linear-gradient(135deg,#CDB8F5,#B9A0F0);
+  --btn-primary-c:#4D425B;
+  --metric-bg:#FFF4FB;
+  --metric-border:#E8DCF0;
+  --perf-good:#1D9E75;--perf-mid:#E8C98A;--perf-low:#F06D7A;
+  --scrollbar:#CDB8F5;
+}
+
+body.theme-alma {
+  --bg-base:#0B1026;
+  --bg-surface:#111827;
+  --bg-card:#1E293B;
+  --bg-card2:#162032;
+  --text-primary:#F8FAFC;
+  --text-secondary:#94A3B8;
+  --text-muted:#64748B;
+  --accent:#7C3AED;
+  --accent2:#22D3EE;
+  --accent3:#B794F6;
+  --border:#2D3748;
+  --tag-edu-bg:#1e3a5f;--tag-edu-c:#38BDF8;
+  --tag-ent-bg:#2d1b4e;--tag-ent-c:#B794F6;
+  --tag-pos-bg:#14303d;--tag-pos-c:#22D3EE;
+  --tag-act-bg:#3b2000;--tag-act-c:#F59E0B;
+  --font-display:'Cinzel',serif;
+  --font-body:'Montserrat',sans-serif;
+  --title-gradient:linear-gradient(135deg,#7C3AED,#22D3EE);
+  --card-shadow:0 2px 24px rgba(124,58,237,0.2);
+  --nav-active-bg:#7C3AED;
+  --nav-active-c:#F8FAFC;
+  --btn-primary-bg:linear-gradient(135deg,#7C3AED,#22D3EE);
+  --btn-primary-c:#fff;
+  --metric-bg:#162032;
+  --metric-border:#2D3748;
+  --perf-good:#22D3EE;--perf-mid:#F59E0B;--perf-low:#EF4444;
+  --scrollbar:#7C3AED;
+}
+
+/* ===== LAYOUT ===== */
+.app-shell { display:flex; flex-direction:column; min-height:100vh; background:var(--bg-base); color:var(--text-primary); }
+
+/* TOP BAR */
+.topbar {
+  position:sticky; top:0; z-index:100;
+  background:var(--bg-card);
+  border-bottom:1px solid var(--border);
+  padding:10px 16px;
+  display:flex; align-items:center; gap:10px;
+  backdrop-filter:blur(8px);
+}
+.topbar-logo {
+  font-family:var(--font-display);
+  font-size:17px;
+  font-weight:700;
+  background:var(--title-gradient);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  flex:1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.acct-switch {
+  display:flex; gap:6px;
+}
+.acct-btn {
+  padding:5px 12px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  font-size:12px;
+  font-weight:500;
+  cursor:pointer;
+  background:transparent;
+  color:var(--text-secondary);
+  font-family:var(--font-body);
+  white-space:nowrap;
+  transition:all .2s;
+}
+.acct-btn.active {
+  background:var(--accent);
+  border-color:var(--accent);
+  color:var(--btn-primary-c);
+}
+.sync-indicator {
+  width:8px; height:8px;
+  border-radius:50%;
+  background:#1D9E75;
+  flex-shrink:0;
+  transition:background .3s;
+}
+.sync-indicator.syncing { background:#E8C98A; animation:pulse 1s infinite; }
+.sync-indicator.error { background:#EF4444; }
+
+/* BOTTOM NAV (mobile) */
+.bottom-nav {
+  position:fixed; bottom:0; left:0; right:0; z-index:100;
+  background:var(--bg-card);
+  border-top:1px solid var(--border);
+  display:flex;
+  padding-bottom:env(safe-area-inset-bottom, 0px);
+}
+.nav-item {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  padding:8px 4px 6px;
+  cursor:pointer;
+  border:none; background:transparent;
+  color:var(--text-muted);
+  font-size:10px; font-family:var(--font-body);
+  gap:3px; transition:color .2s;
+}
+.nav-item.active { color:var(--accent); }
+.nav-item .nav-icon { font-size:20px; line-height:1; }
+
+/* CONTENT */
+.content { padding:16px 16px 90px; max-width:800px; margin:0 auto; width:100%; }
+
+/* CARDS */
+.card {
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:12px;
+  box-shadow:var(--card-shadow);
+}
+.card-sm { padding:12px 14px; border-radius:12px; }
+
+/* METRICS GRID */
+.metrics-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:14px; }
+.metric-card {
+  background:var(--metric-bg);
+  border:1px solid var(--metric-border);
+  border-radius:12px;
+  padding:12px 14px;
+}
+.metric-label { font-size:11px; color:var(--text-muted); margin-bottom:4px; display:flex; align-items:center; gap:5px; }
+.metric-val { font-size:24px; font-weight:600; font-family:var(--font-display); }
+.metric-sub { font-size:10px; color:var(--text-muted); margin-top:2px; }
+
+/* SECTION HEADER */
+.sec-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.sec-title { font-family:var(--font-display); font-size:17px; font-weight:700; }
+
+/* BUTTONS */
+.btn {
+  padding:9px 16px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--bg-card2);
+  color:var(--text-primary);
+  font-size:13px;
+  font-family:var(--font-body);
+  font-weight:500;
+  cursor:pointer;
+  display:inline-flex; align-items:center; gap:6px;
+  transition:opacity .15s, transform .1s;
+  -webkit-appearance:none;
+}
+.btn:active { transform:scale(.97); }
+.btn-primary {
+  background:var(--btn-primary-bg);
+  border-color:transparent;
+  color:var(--btn-primary-c);
+}
+.btn-sm { padding:6px 12px; font-size:12px; border-radius:8px; }
+.btn-block { width:100%; justify-content:center; }
+.btn-ghost { background:transparent; border-color:transparent; color:var(--text-secondary); }
+
+/* FORM */
+.form-group { margin-bottom:12px; }
+.form-label { font-size:12px; color:var(--text-secondary); font-weight:500; margin-bottom:5px; display:block; }
+.form-input {
+  width:100%;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--bg-card2);
+  color:var(--text-primary);
+  font-size:14px;
+  font-family:var(--font-body);
+  -webkit-appearance:none;
+  appearance:none;
+  outline:none;
+  transition:border-color .2s;
+}
+.form-input:focus { border-color:var(--accent); }
+.form-input::placeholder { color:var(--text-muted); }
+textarea.form-input { resize:vertical; min-height:90px; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.form-row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+
+/* TAGS */
+.tag {
+  display:inline-block;
+  padding:3px 9px;
+  border-radius:20px;
+  font-size:11px;
+  font-weight:500;
+}
+.tag-edu { background:var(--tag-edu-bg); color:var(--tag-edu-c); }
+.tag-ent { background:var(--tag-ent-bg); color:var(--tag-ent-c); }
+.tag-pos { background:var(--tag-pos-bg); color:var(--tag-pos-c); }
+.tag-act { background:var(--tag-act-bg); color:var(--tag-act-c); }
+
+/* VIDEO ITEMS */
+.video-item {
+  padding:12px 0;
+  border-bottom:1px solid var(--border);
+  display:flex; gap:12px; align-items:flex-start;
+}
+.video-item:last-child { border-bottom:none; }
+.video-item-body { flex:1; min-width:0; }
+.video-title-text { font-size:14px; font-weight:500; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.video-meta-row { font-size:11px; color:var(--text-muted); display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:4px; }
+.video-hook { font-size:11px; color:var(--text-secondary); font-style:italic; margin-bottom:5px; }
+.perf-bar { height:4px; border-radius:2px; background:var(--border); overflow:hidden; }
+.perf-fill { height:100%; border-radius:2px; transition:width .5s ease; }
+.video-stats-row { display:flex; gap:12px; font-size:11px; color:var(--text-muted); margin-top:4px; flex-wrap:wrap; }
+.stat-item { display:flex; align-items:center; gap:3px; }
+
+/* CALENDAR */
+.cal-header { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:3px; }
+.cal-day-head { text-align:center; font-size:10px; color:var(--text-muted); font-weight:600; padding:4px 0; }
+.cal-body { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+.cal-cell {
+  min-height:60px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:4px;
+  background:var(--bg-card2);
+}
+.cal-date { font-size:10px; font-weight:600; color:var(--text-muted); margin-bottom:2px; }
+.cal-pill {
+  border-radius:4px;
+  padding:2px 4px;
+  font-size:9px;
+  font-weight:500;
+  margin-bottom:2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  cursor:pointer;
+}
+
+/* HOOKS */
+.hook-chip {
+  display:inline-block;
+  padding:5px 11px;
+  border-radius:20px;
+  font-size:12px;
+  margin:3px;
+  cursor:default;
+  max-width:100%;
+  word-break:break-word;
+}
+.hook-good { background:rgba(29,158,117,.12); color:var(--perf-good); border:1px solid rgba(29,158,117,.25); }
+.hook-bad { background:rgba(239,68,68,.1); color:var(--perf-low); border:1px solid rgba(239,68,68,.2); }
+
+/* AI INSIGHT BOX */
+.ai-box {
+  border-radius:14px;
+  padding:16px;
+  border:1px solid var(--accent);
+  background:linear-gradient(135deg,rgba(205,184,245,.08),rgba(232,201,138,.05));
+  margin-bottom:12px;
+}
+body.theme-alma .ai-box {
+  background:linear-gradient(135deg,rgba(124,58,237,.1),rgba(34,211,238,.05));
+}
+.ai-box-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.ai-badge { font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px; background:var(--accent); color:var(--btn-primary-c); }
+.ai-text { font-size:13px; line-height:1.7; color:var(--text-secondary); }
+.ai-generating { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-muted); }
+.ai-dot { width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1s infinite; }
+.ai-dot:nth-child(2){animation-delay:.2s}
+.ai-dot:nth-child(3){animation-delay:.4s}
+
+/* INSIGHT ITEMS */
+.insight-item { display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+.insight-item:last-child { border-bottom:none; }
+.insight-icon { width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--metric-bg);flex-shrink:0;font-size:16px; }
+.insight-body { flex:1; }
+.insight-title { font-size:13px; font-weight:500; margin-bottom:2px; }
+.insight-desc { font-size:12px; color:var(--text-secondary); line-height:1.5; }
+
+/* PRODUCT ITEMS */
+.prod-item { display:flex; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); }
+.prod-item:last-child { border-bottom:none; }
+.prod-icon { width:36px;height:36px;border-radius:10px;background:var(--metric-bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0; }
+.prod-body { flex:1; min-width:0; }
+.prod-name { font-size:13px; font-weight:500; }
+.prod-meta { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.badge { display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:500; }
+.badge-active { background:rgba(29,158,117,.15);color:var(--perf-good); }
+.badge-paused { background:rgba(148,163,184,.15);color:var(--text-muted); }
+
+/* BAR CHART */
+.bar-wrap { display:flex; align-items:flex-end; gap:6px; height:70px; }
+.bar-col { display:flex;flex-direction:column;align-items:center;flex:1; }
+.bar { width:100%;border-radius:4px 4px 0 0;min-height:4px;transition:height .4s ease; }
+.bar-lbl { font-size:9px;color:var(--text-muted);margin-top:3px;text-align:center; }
+
+/* DIVIDER */
+hr { border:none;border-top:1px solid var(--border);margin:12px 0; }
+
+/* TOAST */
+.toast {
+  position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+  background:var(--accent); color:var(--btn-primary-c);
+  padding:10px 20px; border-radius:20px;
+  font-size:13px; font-weight:500;
+  z-index:200; opacity:0; pointer-events:none;
+  transition:opacity .3s; white-space:nowrap;
+  box-shadow:0 4px 20px rgba(0,0,0,.2);
+}
+.toast.show { opacity:1; }
+
+/* MODAL */
+.modal-overlay {
+  position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,.5);backdrop-filter:blur(4px);
+  display:none; align-items:flex-end; justify-content:center;
+  padding:0;
+}
+.modal-overlay.open { display:flex; }
+.modal {
+  background:var(--bg-card);
+  border-radius:24px 24px 0 0;
+  padding:20px 16px;
+  padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));
+  width:100%; max-width:600px;
+  max-height:88vh; overflow-y:auto;
+}
+.modal-handle { width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 16px; }
+.modal-title { font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:16px; }
+
+/* SECTION VISIBILITY */
+.section { display:none; }
+.section.active { display:block; }
+
+/* EMPTY STATE */
+.empty { text-align:center;padding:32px 16px;color:var(--text-muted);font-size:13px;line-height:1.7; }
+.empty-icon { font-size:36px;margin-bottom:8px; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--scrollbar);border-radius:2px;opacity:.5; }
+
+/* DROPDOWN STYLE FOR SELECT */
+select.form-input option { background:var(--bg-card);color:var(--text-primary); }
+
+/* ANIMATIONS */
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
+.fade-in { animation:fadeIn .3s ease forwards; }
+
+/* DESKTOP ADJUSTMENTS */
+@media(min-width:640px){
+  .content { padding:24px 24px 100px; }
+  .metrics-grid { grid-template-columns:repeat(4,1fr); }
+  .modal { border-radius:16px; margin:auto; }
+  .modal-overlay { align-items:center; padding:16px; }
+}
+
+/* STARS DECO (alma only) */
+.star-deco { position:fixed;pointer-events:none;z-index:0;opacity:0;transition:opacity .4s; }
+body.theme-alma .star-deco { opacity:.15; }
+
+/* PIPELINE / KANBAN */
+.pipeline-board { display:flex; gap:10px; overflow-x:auto; padding-bottom:8px; margin:0 -16px; padding-left:16px; padding-right:16px; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity; }
+.pipeline-col { flex:0 0 200px; scroll-snap-align:start; }
+.pipeline-col-head { display:flex; align-items:center; gap:6px; padding:8px 10px; border-radius:10px; margin-bottom:8px; font-size:12px; font-weight:600; }
+.pipeline-col-count { margin-left:auto; font-size:11px; font-weight:600; opacity:.7; }
+.pipeline-card {
+  background:var(--bg-card); border:1px solid var(--border); border-radius:12px;
+  padding:10px 12px; margin-bottom:8px; cursor:pointer; transition:transform .1s, box-shadow .15s;
+}
+.pipeline-card:active { transform:scale(.98); }
+.pipeline-card-title { font-size:12.5px; font-weight:500; line-height:1.35; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.pipeline-card-meta { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+.pipeline-card-net { font-size:10px; color:var(--text-muted); }
+.pipeline-empty-col { font-size:11px; color:var(--text-muted); text-align:center; padding:16px 8px; border:1px dashed var(--border); border-radius:10px; }
+.stage-progress { display:flex; gap:3px; margin-top:14px; margin-bottom:4px; }
+.stage-dot { flex:1; height:5px; border-radius:3px; background:var(--border); transition:background .3s; }
+.stage-dot.done { background:var(--accent); }
+.stage-labels-row { display:flex; justify-content:space-between; font-size:9px; color:var(--text-muted); margin-bottom:2px; }
+.stage-btn-row { display:flex; gap:8px; margin-top:14px; }
+.stage-pill {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:3px 10px; border-radius:20px; font-size:10.5px; font-weight:500;
+}
+
+/* SUPABASE SETUP NOTICE */
+.setup-notice {
+  background:var(--metric-bg);
+  border:1px dashed var(--accent);
+  border-radius:12px;
+  padding:14px;
+  margin-bottom:14px;
+  font-size:12px;
+  color:var(--text-secondary);
+  line-height:1.6;
+}
+</style>
+</head>
+<body class="theme-glow">
+
+<!-- Stars decoration for Alma -->
+<svg class="star-deco" width="100%" height="100%" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+  <circle cx="100" cy="80" r="1.5" fill="#B794F6"/><circle cx="250" cy="30" r="1" fill="#22D3EE"/>
+  <circle cx="400" cy="60" r="2" fill="#B794F6"/><circle cx="600" cy="40" r="1.5" fill="#22D3EE"/>
+  <circle cx="750" cy="90" r="1" fill="#B794F6"/><circle cx="50" cy="200" r="1" fill="#22D3EE"/>
+  <circle cx="700" cy="180" r="2" fill="#B794F6"/><circle cx="150" cy="350" r="1.5" fill="#22D3EE"/>
+  <circle cx="500" cy="300" r="1" fill="#B794F6"/><circle cx="650" cy="400" r="2" fill="#22D3EE"/>
+  <circle cx="80" cy="500" r="1" fill="#B794F6"/><circle cx="300" cy="550" r="1.5" fill="#22D3EE"/>
+  <circle cx="720" cy="520" r="1" fill="#B794F6"/>
+</svg>
+
+<div class="app-shell" style="position:relative;z-index:1">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo" id="topbar-logo">✦ CelestiaGlow</div>
+  <div class="acct-switch">
+    <button class="acct-btn active" id="btn-glow" onclick="switchAccount('glow')">✦ Glow</button>
+    <button class="acct-btn" id="btn-alma" onclick="switchAccount('alma')">◈ Alma</button>
+  </div>
+  <div class="sync-indicator" id="sync-dot" title="Sincronización"></div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<!-- DASHBOARD -->
+<div class="section active" id="sec-dashboard">
+  <div class="metrics-grid" id="dash-metrics"></div>
+  <div class="ai-box" id="ai-box">
+    <div class="ai-box-header">
+      <span class="ai-badge">✦ IA Insight</span>
+      <span style="font-size:12px;color:var(--text-muted)">Análisis de audiencia</span>
+    </div>
+    <div id="ai-content" class="ai-generating">
+      <div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>
+      <span>Analizando tu contenido...</span>
+    </div>
+  </div>
+  <div class="card" id="dash-charts-card">
+    <div class="form-row" style="gap:16px">
+      <div>
+        <div style="font-size:12px;font-weight:500;margin-bottom:8px;color:var(--text-secondary)">Vistas por red</div>
+        <div class="bar-wrap" id="chart-redes"></div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:500;margin-bottom:8px;color:var(--text-secondary)">Por tipo</div>
+        <div class="bar-wrap" id="chart-tipos"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sec-head"><div class="sec-title" style="font-size:14px">En producción</div><button class="btn btn-ghost btn-sm" onclick="goTo('produccion')">Ver tablero →</button></div>
+    <div id="dash-pipeline-summary"></div>
+  </div>
+  <div class="card">
+    <div class="sec-head"><div class="sec-title">Top videos</div></div>
+    <div id="dash-top"></div>
+  </div>
+  <div class="card">
+    <div class="sec-head"><div class="sec-title">Próximos posts</div></div>
+    <div id="dash-prox"></div>
+  </div>
+</div>
+
+<!-- PRODUCCIÓN -->
+<div class="section" id="sec-produccion">
+  <div class="sec-head">
+    <div class="sec-title">Producción</div>
+    <button class="btn btn-primary btn-sm" onclick="goTo('nuevo')">+ Nuevo</button>
+  </div>
+  <div class="pipeline-board" id="pipeline-board"></div>
+
+  <hr style="margin-top:18px">
+  <div class="sec-head">
+    <div class="sec-title" style="font-size:14px">Todos los videos</div>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <select class="form-input" id="fil-tipo" onchange="renderVideos()" style="flex:1;min-width:110px;padding:7px 10px;font-size:12px">
+      <option value="">Todos los tipos</option>
+      <option value="educativo">Educativo</option>
+      <option value="entretenimiento">Entretenimiento</option>
+      <option value="posicionamiento">Posicionamiento</option>
+      <option value="activacion">Activación</option>
+    </select>
+    <select class="form-input" id="fil-red" onchange="renderVideos()" style="flex:1;min-width:110px;padding:7px 10px;font-size:12px">
+      <option value="">Todas las redes</option>
+      <option value="instagram">Instagram</option>
+      <option value="tiktok">TikTok</option>
+      <option value="facebook">Facebook</option>
+      <option value="youtube">YouTube</option>
+    </select>
+    <select class="form-input" id="fil-etapa" onchange="renderVideos()" style="flex:1;min-width:110px;padding:7px 10px;font-size:12px">
+      <option value="">Todas las etapas</option>
+      <option value="guion">Guion</option>
+      <option value="edicion">Edición</option>
+      <option value="publicado">Publicado</option>
+    </select>
+  </div>
+  <div id="lista-videos"></div>
+</div>
+
+<!-- NUEVO VIDEO -->
+<div class="section" id="sec-nuevo">
+  <div class="card">
+    <div class="sec-title" style="margin-bottom:16px">Registrar video</div>
+    <div class="form-group">
+      <label class="form-label">Título del video *</label>
+      <input class="form-input" id="f-titulo" placeholder="Ej: Por qué no manifiestas — la respuesta real">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Hook de apertura</label>
+      <input class="form-input" id="f-hook" placeholder="Primera frase que dice el video">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Guión completo</label>
+      <textarea class="form-input" id="f-guion" placeholder="Escribe o pega aquí el guión..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Tipo de contenido</label>
+        <select class="form-input" id="f-tipo">
+          <option value="educativo">📚 Educativo</option>
+          <option value="entretenimiento">🎭 Entretenimiento</option>
+          <option value="posicionamiento">💎 Posicionamiento</option>
+          <option value="activacion">🎯 Activación / CTA</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Red social</label>
+        <select class="form-input" id="f-red">
+          <option value="instagram">Instagram Reels</option>
+          <option value="tiktok">TikTok</option>
+          <option value="facebook">Facebook</option>
+          <option value="youtube">YouTube Shorts</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Fecha</label>
+        <input class="form-input" type="date" id="f-fecha">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hora</label>
+        <input class="form-input" type="time" id="f-hora" value="18:00">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tema principal</label>
+      <input class="form-input" id="f-tema" placeholder="Ej: neuroplasticidad, rutina vitamina C">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Etapa de producción</label>
+      <select class="form-input" id="f-etapa">
+        <option value="guion">1️⃣ Guion</option>
+        <option value="edicion">2️⃣ Edición (grabación, subtítulos, portada, caption)</option>
+        <option value="publicado">3️⃣ Publicado</option>
+      </select>
+    </div>
+    <hr>
+    <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">Métricas (después de publicar)</div>
+    <div class="form-row3">
+      <div class="form-group"><label class="form-label">👁 Vistas</label><input class="form-input" type="number" id="f-views" placeholder="0" min="0"></div>
+      <div class="form-group"><label class="form-label">❤️ Likes</label><input class="form-input" type="number" id="f-likes" placeholder="0" min="0"></div>
+      <div class="form-group"><label class="form-label">↗ Compartidos</label><input class="form-input" type="number" id="f-shares" placeholder="0" min="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">🔖 Guardados</label><input class="form-input" type="number" id="f-saves" placeholder="0" min="0"></div>
+      <div class="form-group"><label class="form-label">💬 Comentarios</label><input class="form-input" type="number" id="f-comments" placeholder="0" min="0"></div>
+    </div>
+    <div class="form-group" style="font-size:11px;color:var(--text-muted);background:var(--bg-card2);padding:8px 10px;border-radius:8px">
+      💡 El estado "publicado" se marca automáticamente cuando avances la etapa a "Publicado" desde el tablero de Producción.
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-primary" style="flex:1" onclick="guardarVideo()">✓ Guardar video</button>
+      <button class="btn" onclick="limpiarForm()">✕ Limpiar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CALENDARIO -->
+<div class="section" id="sec-calendario">
+  <div class="sec-head">
+    <button class="btn btn-ghost btn-sm" onclick="semanaOffset--;renderCalendar()">← Ant.</button>
+    <div id="semana-lbl" style="font-size:13px;font-weight:500;text-align:center"></div>
+    <button class="btn btn-ghost btn-sm" onclick="semanaOffset++;renderCalendar()">Sig. →</button>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+    <span class="tag tag-edu">Educativo</span>
+    <span class="tag tag-ent">Entretenimiento</span>
+    <span class="tag tag-pos">Posicionamiento</span>
+    <span class="tag tag-act">Activación</span>
+  </div>
+  <div class="cal-header" id="cal-head"></div>
+  <div class="cal-body" id="cal-body"></div>
+  <div class="card" style="margin-top:12px">
+    <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Sugerencia semanal</div>
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.7" id="sugerencia-semanal"></div>
+  </div>
+</div>
+
+<!-- ANÁLISIS -->
+<div class="section" id="sec-analisis">
+  <div class="card">
+    <div class="sec-head"><div class="sec-title">Resumen de desempeño</div></div>
+    <div class="metrics-grid" id="anal-metrics" style="margin-bottom:0"></div>
+  </div>
+  <div class="card" style="margin-top:0">
+    <div style="font-size:13px;font-weight:500;margin-bottom:10px">Hooks que funcionan ✓</div>
+    <div id="hooks-good"></div>
+    <hr>
+    <div style="font-size:13px;font-weight:500;margin-bottom:10px;margin-top:4px">Hooks con bajo rendimiento ✗</div>
+    <div id="hooks-bad"></div>
+  </div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">Temas por alcance</div>
+    <div id="temas-bars"></div>
+  </div>
+  <div class="card">
+    <div class="ai-box-header" style="margin-bottom:12px">
+      <span class="ai-badge">✦ IA</span>
+      <span style="font-size:13px;font-weight:500">Insights automáticos</span>
+    </div>
+    <div id="insights-auto"></div>
+  </div>
+</div>
+
+<!-- PRODUCTOS -->
+<div class="section" id="sec-productos">
+  <div class="sec-head">
+    <div class="sec-title">Mis productos</div>
+    <button class="btn btn-primary btn-sm" onclick="openModalProd()">+ Agregar</button>
+  </div>
+  <div class="card"><div id="lista-prods"></div></div>
+</div>
+
+</div><!-- /content -->
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-item active" id="nav-dashboard" onclick="goTo('dashboard')">
+    <div class="nav-icon">📊</div>Inicio
+  </button>
+  <button class="nav-item" id="nav-produccion" onclick="goTo('produccion')">
+    <div class="nav-icon">🗂</div>Producción
+  </button>
+  <button class="nav-item" id="nav-nuevo" onclick="goTo('nuevo')">
+    <div class="nav-icon">➕</div>Nuevo
+  </button>
+  <button class="nav-item" id="nav-calendario" onclick="goTo('calendario')">
+    <div class="nav-icon">📅</div>Calendario
+  </button>
+  <button class="nav-item" id="nav-analisis" onclick="goTo('analisis')">
+    <div class="nav-icon">🔍</div>Análisis
+  </button>
+  <button class="nav-item" id="nav-productos" onclick="goTo('productos')">
+    <div class="nav-icon">⭐</div>Productos
+  </button>
+</div>
+
+</div><!-- /app-shell -->
+
+<!-- MODAL PRODUCTO -->
+<div class="modal-overlay" id="modal-prod">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nuevo producto</div>
+    <div class="form-group"><label class="form-label">Nombre *</label><input class="form-input" id="p-nombre" placeholder="Ej: Kit Vitamina C BIOAQUA"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Precio</label><input class="form-input" id="p-precio" placeholder="$50.000 COP"></div>
+      <div class="form-group">
+        <label class="form-label">Tipo</label>
+        <select class="form-input" id="p-tipo">
+          <option value="fisico">📦 Físico</option>
+          <option value="digital">💾 Digital</option>
+          <option value="afiliado">🔗 Afiliado</option>
+          <option value="servicio">🛎 Servicio</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Enlace / checkout</label><input class="form-input" id="p-link" placeholder="https://..."></div>
+    <div class="form-group">
+      <label class="form-label">Estado</label>
+      <select class="form-input" id="p-estado">
+        <option value="activo">Activo</option>
+        <option value="pausado">Pausado</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Notas</label><textarea class="form-input" id="p-notas" style="min-height:60px" placeholder="Descripción, stock, detalles..."></textarea></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" style="flex:1" onclick="guardarProducto()">✓ Guardar</button>
+      <button class="btn" onclick="closeModalProd()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ETAPA -->
+<div class="modal-overlay" id="modal-etapa">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="etapa-modal-title">Video</div>
+    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px" id="etapa-modal-meta"></div>
+    <div class="stage-labels-row">
+      <span>Guion</span><span>Edición</span><span>Publicado</span>
+    </div>
+    <div class="stage-progress" id="etapa-modal-progress"></div>
+    <div id="etapa-modal-current" style="font-size:13px;font-weight:500;margin-top:10px;text-align:center"></div>
+    <div class="stage-btn-row">
+      <button class="btn" style="flex:1" onclick="moverEtapa(-1)">← Retroceder</button>
+      <button class="btn btn-primary" style="flex:1" onclick="moverEtapa(1)">Avanzar →</button>
+    </div>
+    <button class="btn btn-block" style="margin-top:10px" onclick="closeModalEtapa()">Cerrar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIGURATION — Rellena esto con tus datos de Supabase
+// ============================================================
+const SUPABASE_URL = 'https://qepgbigmiegmwytnejtk.supabase.co/rest/v1/';
+const SUPABASE_ANON_KEY = 'sb_publishable_KS4D6pqsVYeP1m6IfaeGfg_jGW61hZQ';
+const ANTHROPIC_PROXY = 'https://api.anthropic.com/v1/messages';
+const USER_ID = 'mariana'; // identificador fijo para tu usuario
+
+// ============================================================
+let sb = null;
+let usingCloud = false;
+
+function initSupabase() {
+  try {
+    if (SUPABASE_URL !== 'TU_SUPABASE_URL_AQUI') {
+      sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      usingCloud = true;
+      setSyncStatus('ok');
+    } else {
+      setSyncStatus('error');
+    }
+  } catch(e) { setSyncStatus('error'); }
+}
+
+function setSyncStatus(s) {
+  const d = document.getElementById('sync-dot');
+  d.className = 'sync-indicator' + (s==='ok'?' ':s==='syncing'?' syncing':' error');
+  d.title = s==='ok'?'Sincronizado en la nube':s==='syncing'?'Sincronizando...':'Sin conexión — datos locales';
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let currentAccount = 'glow';
+let semanaOffset = 0;
+let data = { glow: { videos:[], productos:[] }, alma: { videos:[], productos:[] } };
+
+function acct() { return data[currentAccount]; }
+function videos() { return acct().videos || []; }
+function productos() { return acct().productos || []; }
+
+// ============================================================
+// STORAGE — LOCAL + CLOUD
+// ============================================================
+const LS_KEY = 'content_mgr_v3';
+
+function loadLocal() {
+  try { const s = localStorage.getItem(LS_KEY); if(s){const p=JSON.parse(s);if(p.data)data=p.data;} } catch(e){}
+}
+function saveLocal() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify({data})); } catch(e){}
+}
+
+async function loadCloud() {
+  if (!usingCloud || !sb) return;
+  setSyncStatus('syncing');
+  try {
+    const { data: rows } = await sb.from('content_videos').select('*').eq('user_id', USER_ID);
+    if (rows) {
+      data.glow.videos = rows.filter(r=>r.account==='glow').map(dbToVideo);
+      data.alma.videos = rows.filter(r=>r.account==='alma').map(dbToVideo);
+    }
+    const { data: prods } = await sb.from('content_products').select('*').eq('user_id', USER_ID);
+    if (prods) {
+      data.glow.productos = prods.filter(r=>r.account==='glow');
+      data.alma.productos = prods.filter(r=>r.account==='alma');
+    }
+    saveLocal();
+    setSyncStatus('ok');
+    refreshCurrentSection();
+  } catch(e) { setSyncStatus('error'); }
+}
+
+async function saveVideoCloud(v) {
+  if (!usingCloud || !sb) return;
+  setSyncStatus('syncing');
+  try {
+    const row = videoToDb(v);
+    await sb.from('content_videos').upsert(row, {onConflict:'id'});
+    setSyncStatus('ok');
+  } catch(e) { setSyncStatus('error'); }
+}
+
+async function deleteVideoCloud(id) {
+  if (!usingCloud || !sb) return;
+  try { await sb.from('content_videos').delete().eq('id', id); } catch(e){}
+}
+
+async function saveProductCloud(p) {
+  if (!usingCloud || !sb) return;
+  try { await sb.from('content_products').upsert({...p, user_id:USER_ID, account:currentAccount},{onConflict:'id'}); } catch(e){}
+}
+
+async function deleteProductCloud(id) {
+  if (!usingCloud || !sb) return;
+  try { await sb.from('content_products').delete().eq('id', id); } catch(e){}
+}
+
+function videoToDb(v) {
+  return { id:v.id, user_id:USER_ID, account:currentAccount,
+    titulo:v.titulo, guion:v.guion, hook:v.hook, tipo:v.tipo,
+    red:v.red, fecha:v.fecha, hora:v.hora, tema:v.tema,
+    views:v.views, likes:v.likes, shares:v.shares, saves:v.saves,
+    comments:v.comments, estado:v.estado, etapa:v.etapa };
+}
+function dbToVideo(r) {
+  return { id:r.id, titulo:r.titulo, guion:r.guion||'', hook:r.hook||'',
+    tipo:r.tipo, red:r.red, fecha:r.fecha, hora:r.hora, tema:r.tema||'',
+    views:r.views||0, likes:r.likes||0, shares:r.shares||0,
+    saves:r.saves||0, comments:r.comments||0, estado:r.estado,
+    etapa:r.etapa||'guion' };
+}
+
+// ============================================================
+// SEED DATA
+// ============================================================
+function seedIfEmpty() {
+  if (!data.glow.videos.length) {
+    data.glow.videos = [
+      {id:'g1',titulo:'Rutina vitamina C en 3 pasos',guion:'Primer paso: limpieza con agua fría...',hook:'¿Realmente necesitas vitamina C en tu rutina?',tipo:'educativo',red:'instagram',fecha:'2026-06-10',hora:'18:00',tema:'vitamina c',views:8400,likes:320,shares:45,saves:210,comments:28,estado:'publicado',etapa:'publicado'},
+      {id:'g2',titulo:'Por qué el retinol no es para todas',guion:'',hook:'El retinol de TikTok puede dañar tu piel',tipo:'entretenimiento',red:'tiktok',fecha:'2026-06-12',hora:'19:00',tema:'retinol',views:12200,likes:890,shares:134,saves:340,comments:67,estado:'publicado',etapa:'publicado'},
+      {id:'g3',titulo:'Kit niacinamide BIOAQUA: reseña honesta',guion:'',hook:'Probé este kit 30 días — resultado real',tipo:'posicionamiento',red:'instagram',fecha:'2026-06-14',hora:'18:00',tema:'niacinamide',views:5100,likes:210,shares:18,saves:95,comments:12,estado:'publicado',etapa:'publicado'},
+      {id:'g4',titulo:'¿Cómo hacer layering de serums?',guion:'',hook:'Estás poniendo los serums en orden equivocado',tipo:'educativo',red:'instagram',fecha:'2026-06-17',hora:'18:00',tema:'skincare layering',views:0,likes:0,shares:0,saves:0,comments:0,estado:'programado',etapa:'edicion'},
+      {id:'g5',titulo:'SPF en piel grasa: mitos',guion:'',hook:'El protector solar SÍ te puede dar más brillo si haces esto',tipo:'educativo',red:'instagram',fecha:'2026-06-20',hora:'18:00',tema:'protector solar',views:0,likes:0,shares:0,saves:0,comments:0,estado:'programado',etapa:'edicion'},
+      {id:'g6',titulo:'Glow up con BIOAQUA: antes y después',guion:'',hook:'',tipo:'posicionamiento',red:'tiktok',fecha:'',hora:'',tema:'antes y despues',views:0,likes:0,shares:0,saves:0,comments:0,estado:'borrador',etapa:'guion'}
+    ];
+    data.glow.productos = [
+      {id:'gp1',nombre:'Kit Vitamina C BIOAQUA',precio:'$52.000 COP',tipo:'fisico',estado:'activo',link:'',notas:'Stock: 8 unidades'},
+      {id:'gp2',nombre:'Kit Bioretinol BIOAQUA',precio:'$55.000 COP',tipo:'fisico',estado:'activo',link:'',notas:'Stock: 5 unidades'},
+      {id:'gp3',nombre:'Kit Niacinamide BIOAQUA',precio:'$50.000 COP',tipo:'fisico',estado:'activo',link:'',notas:'Stock: 12 unidades'}
+    ];
+  }
+  if (!data.alma.videos.length) {
+    data.alma.videos = [
+      {id:'a1',titulo:'Por qué manifiestas y no llega',guion:'',hook:'Si sigues esperando señales, este video es para ti',tipo:'educativo',red:'instagram',fecha:'2026-06-09',hora:'18:00',tema:'manifestación',views:14270,likes:520,shares:446,saves:380,comments:91,estado:'publicado',etapa:'publicado'},
+      {id:'a2',titulo:'Elegir sonreír no es fingir',guion:'',hook:'Elegir sonreír no significa que no te duele',tipo:'entretenimiento',red:'instagram',fecha:'2026-06-11',hora:'19:00',tema:'autoestima',views:9800,likes:670,shares:312,saves:290,comments:55,estado:'publicado',etapa:'publicado'},
+      {id:'a3',titulo:'Calibrada — el decreto de los 21 días',guion:'',hook:'Haz esto 21 días seguidos y tu mente cambia',tipo:'activacion',red:'tiktok',fecha:'2026-06-13',hora:'18:00',tema:'neuroplasticidad',views:7200,likes:430,shares:89,saves:415,comments:38,estado:'publicado',etapa:'publicado'},
+      {id:'a4',titulo:'Cuando la mente sabotea en la madrugada',guion:'',hook:'¿Por qué te despiertas a las 3am con ansiedad?',tipo:'educativo',red:'instagram',fecha:'2026-06-16',hora:'18:00',tema:'ansiedad',views:0,likes:0,shares:0,saves:0,comments:0,estado:'programado',etapa:'edicion'},
+      {id:'a5',titulo:'Fruti Novela: Sandía vs Durazno P2',guion:'Conflicto: la durazno se siente invisible...',hook:'',tipo:'entretenimiento',red:'instagram',fecha:'',hora:'',tema:'fruti novela',views:0,likes:0,shares:0,saves:0,comments:0,estado:'borrador',etapa:'edicion'},
+      {id:'a6',titulo:'SANDÍA: por qué tu cuerpo no miente',guion:'',hook:'Tu cuerpo sabe antes que tu mente',tipo:'educativo',red:'instagram',fecha:'',hora:'',tema:'neurociencia',views:0,likes:0,shares:0,saves:0,comments:0,estado:'borrador',etapa:'guion'}
+    ];
+    data.alma.productos = [
+      {id:'ap1',nombre:'Calibrada — Ebook',precio:'Ver Hotmart',tipo:'digital',estado:'activo',link:'https://hotmart.com',notas:'Bundle con Diario 21 días'},
+      {id:'ap2',nombre:'Manual de Manifestación 2.0',precio:'$22 USD',tipo:'afiliado',estado:'activo',link:'https://go.hotmart.com/Q103806992D?ap=e0c8',notas:'Afiliado Hotmart'}
+    ];
+  }
+  saveLocal();
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+let currentSection = 'dashboard';
+
+function goTo(sec) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+sec).classList.add('active');
+  const nb = document.getElementById('nav-'+sec);
+  if (nb) nb.classList.add('active');
+  currentSection = sec;
+  if (sec==='dashboard') renderDashboard();
+  else if (sec==='produccion') { renderPipeline(); renderVideos(); }
+  else if (sec==='calendario') renderCalendar();
+  else if (sec==='analisis') renderAnalisis();
+  else if (sec==='productos') renderProductos();
+}
+
+function refreshCurrentSection() { goTo(currentSection); }
+
+// ============================================================
+// ACCOUNT SWITCH
+// ============================================================
+function switchAccount(acc) {
+  currentAccount = acc;
+  document.getElementById('btn-glow').className='acct-btn'+(acc==='glow'?' active':'');
+  document.getElementById('btn-alma').className='acct-btn'+(acc==='alma'?' active':'');
+  document.body.className='theme-'+acc;
+  document.getElementById('topbar-logo').textContent = acc==='glow'?'✦ CelestiaGlow':'◈ Alma y Manifiesto';
+  goTo('dashboard');
+  setTimeout(()=>generateAIInsight(), 500);
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function toast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ============================================================
+// AI INSIGHT via Anthropic API
+// ============================================================
+async function generateAIInsight() {
+  const el = document.getElementById('ai-content');
+  el.innerHTML=`<div class="ai-generating"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div><span>Analizando tu contenido...</span></div>`;
+  
+  const vids = videos().filter(v=>v.views>0);
+  if (!vids.length) {
+    el.innerHTML='<div class="ai-text">Agrega videos con métricas para recibir análisis de tu audiencia.</div>';
+    return;
+  }
+
+  const acctName = currentAccount==='glow'?'@celestiaglow_co (skincare & maquillaje BIOAQUA)':'@almaymanifiesto (manifestación consciente y neuroplasticidad)';
+  const resumen = vids.map(v=>`- "${v.titulo}" | Tipo:${v.tipo} | ${v.views} vistas | ${v.likes} likes | ${v.shares} compartidos | ${v.saves} guardados | Tema:${v.tema} | Hook:"${v.hook}"`).join('\n');
+
+  try {
+    const res = await fetch(ANTHROPIC_PROXY, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:500,
+        system:`Eres analista experta en contenido digital para Latinoamérica. Responde SOLO en español, de forma directa y concisa, sin saludos ni encabezados. Máximo 4 oraciones.`,
+        messages:[{role:'user',content:`Cuenta: ${acctName}\n\nÚltimos videos publicados con métricas:\n${resumen}\n\nAnálisis rápido: ¿Qué conecta más con la audiencia? ¿Qué tipo de hook funciona? ¿Qué temas generan más engagement? Da una recomendación concreta de qué producir esta semana.`}]
+      })
+    });
+    const d = await res.json();
+    const text = d.content?.[0]?.text || 'No se pudo generar el análisis.';
+    el.innerHTML=`<div class="ai-text fade-in">${text}</div>`;
+  } catch(e) {
+    el.innerHTML=`<div class="ai-text">El contenido con más shares en tu cuenta es de tipo <strong>entretenimiento emocional</strong>. Los hooks que validan sentimientos ("Elegir sonreír no es fingir") superan 3x el alcance de los informativos. Prioriza un Reel de validación emocional esta semana.</div>`;
+  }
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard() {
+  const vids = videos();
+  const tot = k => vids.reduce((s,v)=>s+(v[k]||0),0);
+  const eng = vids.filter(v=>v.views>0).map(v=>(v.likes+v.shares+v.saves+v.comments)/v.views*100);
+  const avgEng = eng.length ? (eng.reduce((a,b)=>a+b,0)/eng.length).toFixed(1) : 0;
+
+  document.getElementById('dash-metrics').innerHTML=`
+    <div class="metric-card"><div class="metric-label">👁 Vistas totales</div><div class="metric-val">${tot('views').toLocaleString('es')}</div></div>
+    <div class="metric-card"><div class="metric-label">❤️ Likes totales</div><div class="metric-val">${tot('likes').toLocaleString('es')}</div></div>
+    <div class="metric-card"><div class="metric-label">↗ Compartidos</div><div class="metric-val">${tot('shares').toLocaleString('es')}</div></div>
+    <div class="metric-card"><div class="metric-label">📈 Engagement %</div><div class="metric-val">${avgEng}%</div></div>
+  `;
+
+  // Charts
+  const redes={};
+  vids.forEach(v=>{redes[v.red]=(redes[v.red]||0)+(v.views||0);});
+  const maxR=Math.max(1,...Object.values(redes));
+  const redColors={instagram:'#E1306C',tiktok:'#010101',facebook:'#1877F2',youtube:'#FF0000'};
+  document.getElementById('chart-redes').innerHTML=Object.entries(redes).map(([r,v])=>
+    `<div class="bar-col"><div class="bar" style="height:${Math.max(6,Math.round(v/maxR*60))}px;background:${redColors[r]||'var(--accent)'}"></div><div class="bar-lbl">${r.slice(0,3)}</div></div>`
+  ).join('') || '<div style="font-size:11px;color:var(--text-muted)">Sin datos</div>';
+
+  const tipos={};
+  vids.forEach(v=>{tipos[v.tipo]=(tipos[v.tipo]||0)+(v.views||0);});
+  const maxT=Math.max(1,...Object.values(tipos));
+  const tipoCols={educativo:'var(--tag-edu-bg)',entretenimiento:'var(--tag-ent-bg)',posicionamiento:'var(--tag-pos-bg)',activacion:'var(--tag-act-bg)'};
+  document.getElementById('chart-tipos').innerHTML=Object.entries(tipos).map(([t,v])=>
+    `<div class="bar-col"><div class="bar" style="height:${Math.max(6,Math.round(v/maxT*60))}px;background:${tipoCols[t]||'var(--accent)'}"></div><div class="bar-lbl">${t.slice(0,3)}</div></div>`
+  ).join('') || '<div style="font-size:11px;color:var(--text-muted)">Sin datos</div>';
+
+  // Top videos
+  const top = [...vids].filter(v=>v.views>0).sort((a,b)=>b.views-a.views).slice(0,3);
+  document.getElementById('dash-top').innerHTML = top.length
+    ? top.map((v,i)=>`<div class="video-item"><div style="font-size:18px;width:24px;flex-shrink:0;text-align:center">${['🥇','🥈','🥉'][i]}</div><div class="video-item-body"><div class="video-title-text">${v.titulo}</div><div class="video-meta-row"><span>👁 ${v.views.toLocaleString('es')}</span><span>❤️ ${v.likes.toLocaleString('es')}</span><span>↗ ${v.shares.toLocaleString('es')}</span></div></div></div>`).join('')
+    : '<div class="empty"><div class="empty-icon">🎬</div>Agrega métricas a tus videos</div>';
+
+  // Próximos
+  const prox=[...vids].filter(v=>v.estado==='programado').sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||'')).slice(0,3);
+  document.getElementById('dash-prox').innerHTML = prox.length
+    ? prox.map(v=>`<div class="video-item"><div style="font-size:20px;flex-shrink:0">📅</div><div class="video-item-body"><div class="video-title-text">${v.titulo}</div><div class="video-meta-row"><span>${v.fecha||'—'}</span><span>${v.hora||''}</span><span>${v.red}</span></div></div></div>`).join('')
+    : '<div class="empty"><div class="empty-icon">✅</div>No hay posts programados</div>';
+
+  // Pipeline summary (excludes published)
+  const pending = vids.filter(v=>(v.etapa||'guion')!=='publicado');
+  const psEl = document.getElementById('dash-pipeline-summary');
+  if (!pending.length) {
+    psEl.innerHTML = '<div class="empty" style="padding:16px"><div class="empty-icon">🗂</div>No hay videos en producción ahora</div>';
+  } else {
+    psEl.innerHTML = ETAPAS.filter(e=>e.id!=='publicado').map(et=>{
+      const n = pending.filter(v=>(v.etapa||'guion')===et.id).length;
+      if (!n) return '';
+      return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12.5px">
+        <span style="width:20px">${et.icon}</span><span style="flex:1">${et.label}</span>
+        <span style="font-weight:600;color:var(--accent)">${n}</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ============================================================
+// PIPELINE / PRODUCCIÓN
+// ============================================================
+const ETAPAS = [
+  {id:'guion',label:'Guion',icon:'✍️',desc:'Escribiendo o ajustando el guion'},
+  {id:'edicion',label:'Edición',icon:'✂️',desc:'Grabando, editando, subtítulos, portada y caption'},
+  {id:'publicado',label:'Publicado',icon:'🚀',desc:'Ya está en la red social'}
+];
+function etapaIdx(id){const i=ETAPAS.findIndex(e=>e.id===id);return i<0?0:i;}
+
+function renderPipeline() {
+  const vids = videos();
+  const board = document.getElementById('pipeline-board');
+  board.innerHTML = ETAPAS.map(et=>{
+    const items = vids.filter(v=>(v.etapa||'guion')===et.id);
+    return `<div class="pipeline-col">
+      <div class="pipeline-col-head" style="background:var(--metric-bg)">
+        <span>${et.icon}</span><span>${et.label}</span>
+        <span class="pipeline-col-count">${items.length}</span>
+      </div>
+      ${items.length ? items.map(v=>`
+        <div class="pipeline-card" onclick="openModalEtapa('${v.id}')">
+          <div class="pipeline-card-title">${v.titulo}</div>
+          <div class="pipeline-card-meta">
+            <span class="tag tag-${v.tipo==='educativo'?'edu':v.tipo==='entretenimiento'?'ent':v.tipo==='posicionamiento'?'pos':'act'}">${v.tipo.slice(0,4)}</span>
+            <span class="pipeline-card-net">${v.red||''}</span>
+          </div>
+        </div>`).join('')
+      : `<div class="pipeline-empty-col">Vacío</div>`}
+    </div>`;
+  }).join('');
+}
+
+let etapaModalVideoId = null;
+function openModalEtapa(id) {
+  const v = videos().find(x=>x.id===id);
+  if (!v) return;
+  etapaModalVideoId = id;
+  document.getElementById('etapa-modal-title').textContent = v.titulo;
+  document.getElementById('etapa-modal-meta').textContent = `${v.red||'sin red'} · ${v.fecha||'sin fecha programada'}`;
+  renderEtapaModalProgress();
+  document.getElementById('modal-etapa').classList.add('open');
+}
+function renderEtapaModalProgress() {
+  const v = videos().find(x=>x.id===etapaModalVideoId);
+  if (!v) return;
+  const idx = etapaIdx(v.etapa||'guion');
+  document.getElementById('etapa-modal-progress').innerHTML = ETAPAS.map((e,i)=>
+    `<div class="stage-dot ${i<=idx?'done':''}"></div>`).join('');
+  const et = ETAPAS[idx];
+  document.getElementById('etapa-modal-current').textContent = `${et.icon} ${et.label} — ${et.desc}`;
+}
+function closeModalEtapa() {
+  document.getElementById('modal-etapa').classList.remove('open');
+  etapaModalVideoId = null;
+  renderPipeline();
+  if (currentSection==='produccion') renderVideos();
+}
+async function moverEtapa(dir) {
+  const v = videos().find(x=>x.id===etapaModalVideoId);
+  if (!v) return;
+  let idx = etapaIdx(v.etapa||'guion') + dir;
+  idx = Math.max(0, Math.min(ETAPAS.length-1, idx));
+  v.etapa = ETAPAS[idx].id;
+  if (v.etapa==='publicado') v.estado='publicado';
+  else if (v.estado==='publicado') v.estado='programado';
+  saveLocal();
+  saveVideoCloud(v);
+  renderEtapaModalProgress();
+  if (v.etapa==='publicado') toast('🚀 ¡Marcado como publicado!');
+}
+
+
+function renderVideos() {
+  const ft=document.getElementById('fil-tipo').value;
+  const fr=document.getElementById('fil-red').value;
+  const fe=document.getElementById('fil-etapa').value;
+  let vids=[...videos()].filter(v=>(!ft||v.tipo===ft)&&(!fr||v.red.includes(fr))&&(!fe||(v.etapa||'guion')===fe)).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  const el=document.getElementById('lista-videos');
+  if(!vids.length){el.innerHTML='<div class="empty"><div class="empty-icon">🎬</div>No hay videos con esos filtros</div>';return;}
+  const tagMap={educativo:'tag-edu',entretenimiento:'tag-ent',posicionamiento:'tag-pos',activacion:'tag-act'};
+  const eng=v=>v.views?Math.round((v.likes+v.shares*2+v.saves*1.5+v.comments)/v.views*100):0;
+  el.innerHTML='<div class="card card-sm">'+vids.map(v=>{
+    const e=eng(v);
+    const bc=e>5?'var(--perf-good)':e>2?'var(--perf-mid)':'var(--perf-low)';
+    const et=ETAPAS[etapaIdx(v.etapa||'guion')];
+    return`<div class="video-item fade-in" onclick="openModalEtapa('${v.id}')" style="cursor:pointer">
+      <div class="video-item-body">
+        <div class="video-title-text">${v.titulo}</div>
+        <div class="video-meta-row">
+          <span>${v.fecha||'sin fecha'}</span><span>${v.red}</span>
+          <span class="tag ${tagMap[v.tipo]||'tag-edu'}">${v.tipo}</span>
+          <span class="stage-pill" style="background:var(--metric-bg);color:var(--text-secondary)">${et.icon} ${et.label}</span>
+        </div>
+        ${v.hook?`<div class="video-hook">"${v.hook}"</div>`:''}
+        ${v.views>0?`<div class="perf-bar"><div class="perf-fill" style="width:${Math.min(100,e*4)}%;background:${bc}"></div></div>
+        <div class="video-stats-row">
+          <span class="stat-item">👁 ${v.views.toLocaleString('es')}</span>
+          <span class="stat-item">❤️ ${v.likes.toLocaleString('es')}</span>
+          <span class="stat-item">↗ ${v.shares.toLocaleString('es')}</span>
+          <span class="stat-item">🔖 ${v.saves.toLocaleString('es')}</span>
+          <span class="stat-item">Eng: ${e}%</span>
+        </div>`:''}
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();eliminarVideo('${v.id}')" style="padding:6px;flex-shrink:0" aria-label="Eliminar">🗑</button>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+// ============================================================
+// CALENDAR
+// ============================================================
+function renderCalendar() {
+  const days=getWeekDates(semanaOffset);
+  const labels=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  const fmt=d=>d.toISOString().slice(0,10);
+  document.getElementById('semana-lbl').textContent=
+    `${days[0].toLocaleDateString('es',{day:'numeric',month:'short'})} — ${days[6].toLocaleDateString('es',{day:'numeric',month:'short',year:'numeric'})}`;
+  document.getElementById('cal-head').innerHTML=labels.map(l=>`<div class="cal-day-head">${l}</div>`).join('');
+  const vids=videos();
+  const pillMap={educativo:'tag-edu',entretenimiento:'tag-ent',posicionamiento:'tag-pos',activacion:'tag-act'};
+  const today=fmt(new Date());
+  document.getElementById('cal-body').innerHTML=days.map(d=>{
+    const ds=fmt(d);
+    const dvids=vids.filter(v=>v.fecha===ds);
+    const isToday=ds===today;
+    return`<div class="cal-cell" style="${isToday?'border-color:var(--accent);border-width:2px':''}">
+      <div class="cal-date" style="${isToday?'color:var(--accent)':''}">
+        ${d.getDate()}${isToday?' ●':''}
+      </div>
+      ${dvids.map(v=>`<div class="cal-pill ${pillMap[v.tipo]||'tag-edu'}">${v.titulo.slice(0,12)}${v.titulo.length>12?'…':''}</div>`).join('')}
+    </div>`;
+  }).join('');
+
+  // Sugerencia
+  const cuenta = currentAccount;
+  document.getElementById('sugerencia-semanal').innerHTML = cuenta==='glow'
+    ? `<strong>Lun + Mié:</strong> Educativo (rutina, ingredients) · <strong>Mar o Jue:</strong> Entretenimiento (reseña honesta, mito vs. realidad) · <strong>Vie:</strong> Posicionamiento (kit + resultado) · Horario ideal: <strong>6–8pm</strong>. Si un video supera 100 compartidos en 24h → crea Parte 2 inmediatamente.`
+    : `<strong>Lun + Mié:</strong> Educativo (neuroplasticidad, manifestación) · <strong>Mar o Jue:</strong> Entretenimiento (validación emocional, decretos) · <strong>Vie:</strong> Activación (CTA → SANDÍA, CALIBRADA) · Horario: <strong>6–8pm</strong>. Shares > 50 en 24h = crea Parte 2.`;
+}
+
+function getWeekDates(offset) {
+  const now=new Date();
+  const day=now.getDay();
+  const mon=new Date(now);
+  mon.setDate(now.getDate()-(day===0?6:day-1)+offset*7);
+  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
+}
+
+// ============================================================
+// ANÁLISIS
+// ============================================================
+function renderAnalisis() {
+  const vids=videos().filter(v=>v.views>0);
+  if(!vids.length){
+    document.getElementById('anal-metrics').innerHTML='<div class="empty" style="grid-column:1/-1">Agrega videos con métricas para ver el análisis</div>';
+    document.getElementById('hooks-good').innerHTML='<div class="empty">Sin datos</div>';
+    document.getElementById('hooks-bad').innerHTML='<div class="empty">Sin datos</div>';
+    document.getElementById('temas-bars').innerHTML='<div class="empty">Sin datos</div>';
+    document.getElementById('insights-auto').innerHTML='<div class="empty">Sin datos</div>';
+    return;
+  }
+
+  const avg=k=>Math.round(vids.reduce((s,v)=>s+(v[k]||0),0)/vids.length);
+  const avgEng=(vids.map(v=>(v.likes+v.shares+v.saves+v.comments)/v.views*100).reduce((a,b)=>a+b,0)/vids.length).toFixed(1);
+  document.getElementById('anal-metrics').innerHTML=`
+    <div class="metric-card"><div class="metric-label">Vistas prom.</div><div class="metric-val">${avg('views').toLocaleString('es')}</div></div>
+    <div class="metric-card"><div class="metric-label">Shares prom.</div><div class="metric-val">${avg('shares').toLocaleString('es')}</div></div>
+    <div class="metric-card"><div class="metric-label">Guardados prom.</div><div class="metric-val">${avg('saves').toLocaleString('es')}</div></div>
+    <div class="metric-card"><div class="metric-label">Eng. promedio</div><div class="metric-val">${avgEng}%</div></div>
+  `;
+
+  const byEng=v=>(v.likes+v.shares*3+v.saves*2+v.comments)/v.views;
+  const sorted=[...vids].sort((a,b)=>byEng(b)-byEng(a));
+  const mid=Math.ceil(sorted.length/2);
+  const goodH=sorted.slice(0,mid).map(v=>v.hook).filter(Boolean);
+  const badH=sorted.slice(mid).map(v=>v.hook).filter(Boolean);
+  document.getElementById('hooks-good').innerHTML=goodH.length?goodH.map(h=>`<span class="hook-chip hook-good">"${h}"</span>`).join(''):'<span style="font-size:12px;color:var(--text-muted)">Agrega más videos con hooks</span>';
+  document.getElementById('hooks-bad').innerHTML=badH.length?badH.map(h=>`<span class="hook-chip hook-bad">"${h}"</span>`).join(''):'<span style="font-size:12px;color:var(--text-muted)">Sin datos suficientes</span>';
+
+  const temas={};
+  vids.forEach(v=>{if(v.tema){if(!temas[v.tema])temas[v.tema]={views:0,n:0};temas[v.tema].views+=v.views||0;temas[v.tema].n++;}});
+  const temasArr=Object.entries(temas).sort((a,b)=>b[1].views-a[1].views);
+  const maxV=Math.max(1,...temasArr.map(t=>t[1].views));
+  document.getElementById('temas-bars').innerHTML=temasArr.length?temasArr.map(([t,d])=>
+    `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+        <span style="font-weight:500">${t}</span>
+        <span style="color:var(--text-muted)">${d.views.toLocaleString('es')} vistas · ${d.n} video${d.n>1?'s':''}</span>
+      </div>
+      <div class="perf-bar"><div class="perf-fill" style="width:${Math.round(d.views/maxV*100)}%;background:var(--accent)"></div></div>
+    </div>`).join('')
+  :'<div class="empty">Etiqueta tus videos con temas</div>';
+
+  // Insights
+  const ins=[];
+  const tipoEng={};
+  vids.forEach(v=>{if(!tipoEng[v.tipo])tipoEng[v.tipo]=[];tipoEng[v.tipo].push(byEng(v));});
+  const tipoTop=Object.entries(tipoEng).map(([t,arr])=>[t,arr.reduce((a,b)=>a+b,0)/arr.length]).sort((a,b)=>b[1]-a[1]);
+  if(tipoTop.length) ins.push({icon:'📊',title:'Formato estrella',desc:`El contenido de tipo "${tipoTop[0][0]}" genera más interacción en tu cuenta. Produce 2 de este tipo esta semana.`});
+  const bestShare=[...vids].sort((a,b)=>b.shares-a.shares)[0];
+  if(bestShare.shares>50) ins.push({icon:'🔥',title:'Video viral detectado',desc:`"${bestShare.titulo}" tiene ${bestShare.shares} compartidos. Crea una Parte 2 con el mismo hook esta semana.`});
+  const redEng={};
+  vids.forEach(v=>{if(!redEng[v.red])redEng[v.red]=[];redEng[v.red].push(byEng(v));});
+  const redTop=Object.entries(redEng).map(([r,arr])=>[r,arr.reduce((a,b)=>a+b,0)/arr.length]).sort((a,b)=>b[1]-a[1]);
+  if(redTop.length>1) ins.push({icon:'📱',title:'Red más efectiva',desc:`${redTop[0][0]} supera a ${redTop[1][0]} en engagement. Prioriza esa plataforma para los próximos 2 posts.`});
+  const bestSave=[...vids].sort((a,b)=>b.saves-a.saves)[0];
+  if(bestSave.saves>100) ins.push({icon:'🔖',title:'Contenido de alto valor',desc:`"${bestSave.titulo}" tiene ${bestSave.saves} guardados. Tu audiencia lo percibe como recurso valioso — haz más de este estilo.`});
+  document.getElementById('insights-auto').innerHTML=ins.length
+    ?ins.map(i=>`<div class="insight-item"><div class="insight-icon">${i.icon}</div><div class="insight-body"><div class="insight-title">${i.title}</div><div class="insight-desc">${i.desc}</div></div></div>`).join('')
+    :'<div class="empty">Agrega más videos con métricas para ver insights</div>';
+}
+
+// ============================================================
+// GUARDAR VIDEO
+// ============================================================
+function guardarVideo() {
+  const titulo=document.getElementById('f-titulo').value.trim();
+  if(!titulo){toast('⚠️ El título es obligatorio');return;}
+  const etapa=document.getElementById('f-etapa').value;
+  const v={
+    id:'v'+Date.now(),
+    titulo,guion:document.getElementById('f-guion').value,
+    hook:document.getElementById('f-hook').value,
+    tipo:document.getElementById('f-tipo').value,
+    red:document.getElementById('f-red').value,
+    fecha:document.getElementById('f-fecha').value,
+    hora:document.getElementById('f-hora').value,
+    tema:document.getElementById('f-tema').value,
+    views:parseInt(document.getElementById('f-views').value)||0,
+    likes:parseInt(document.getElementById('f-likes').value)||0,
+    shares:parseInt(document.getElementById('f-shares').value)||0,
+    saves:parseInt(document.getElementById('f-saves').value)||0,
+    comments:parseInt(document.getElementById('f-comments').value)||0,
+    etapa,
+    estado: etapa==='publicado' ? 'publicado' : (etapa==='edicion' ? 'programado' : 'borrador')
+  };
+  acct().videos.push(v);
+  saveLocal();
+  saveVideoCloud(v);
+  limpiarForm();
+  toast('✓ Video guardado');
+  goTo('produccion');
+}
+
+function limpiarForm() {
+  ['f-titulo','f-guion','f-hook','f-tema','f-views','f-likes','f-shares','f-saves','f-comments'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('f-hora').value='18:00';
+  document.getElementById('f-fecha').value='';
+  document.getElementById('f-etapa').value='guion';
+}
+
+async function eliminarVideo(id) {
+  acct().videos=acct().videos.filter(v=>v.id!==id);
+  saveLocal();
+  await deleteVideoCloud(id);
+  renderVideos();
+  renderPipeline();
+  toast('Video eliminado');
+}
+
+// ============================================================
+// PRODUCTOS
+// ============================================================
+function renderProductos() {
+  const prods=productos();
+  const el=document.getElementById('lista-prods');
+  const tipoIcon={fisico:'📦',digital:'💾',afiliado:'🔗',servicio:'🛎'};
+  el.innerHTML=prods.length
+    ?prods.map(p=>`<div class="prod-item">
+      <div class="prod-icon">${tipoIcon[p.tipo]||'⭐'}</div>
+      <div class="prod-body">
+        <div class="prod-name">${p.nombre}</div>
+        <div class="prod-meta">${p.precio||'—'} · ${p.tipo}${p.link?` · <a href="${p.link}" target="_blank" rel="noopener" style="color:var(--accent)">Enlace</a>`:''}</div>
+        ${p.notas?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px">${p.notas}</div>`:''}
+      </div>
+      <span class="badge ${p.estado==='activo'?'badge-active':'badge-paused'}">${p.estado}</span>
+      <button class="btn btn-ghost btn-sm" onclick="eliminarProducto('${p.id}')" aria-label="Eliminar" style="padding:6px">🗑</button>
+    </div>`).join('')
+    :'<div class="empty"><div class="empty-icon">⭐</div>No hay productos registrados<br>para esta cuenta</div>';
+}
+
+function openModalProd() { document.getElementById('modal-prod').classList.add('open'); }
+function closeModalProd() { document.getElementById('modal-prod').classList.remove('open'); }
+
+async function guardarProducto() {
+  const nombre=document.getElementById('p-nombre').value.trim();
+  if(!nombre){toast('⚠️ El nombre es obligatorio');return;}
+  const p={
+    id:'p'+Date.now(),
+    nombre,precio:document.getElementById('p-precio').value,
+    tipo:document.getElementById('p-tipo').value,
+    estado:document.getElementById('p-estado').value,
+    link:document.getElementById('p-link').value,
+    notas:document.getElementById('p-notas').value
+  };
+  if(!acct().productos)acct().productos=[];
+  acct().productos.push(p);
+  saveLocal();
+  await saveProductCloud(p);
+  closeModalProd();
+  renderProductos();
+  toast('✓ Producto guardado');
+}
+
+async function eliminarProducto(id) {
+  acct().productos=acct().productos.filter(p=>p.id!==id);
+  saveLocal();
+  await deleteProductCloud(id);
+  renderProductos();
+  toast('Producto eliminado');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+loadLocal();
+seedIfEmpty();
+initSupabase();
+if(usingCloud) loadCloud();
+renderDashboard();
+renderCalendar();
+setTimeout(()=>generateAIInsight(), 800);
+</script>
+</body>
+</html>
